@@ -74,15 +74,14 @@ const registerUser = async (req) => {
       throw new ApiError(500, "Something went wrong!! User not created"); // if user not created/not found in database
     }
 
-    // try {
-    //   await sendWelcomeEmail(
-    //     createdUser.email,
-    //     createdUser.fullname,
-    //     process.env.CLIENT_URL,
-    //   );
-    // } catch (error) {
-    //   throw new ApiError(409, "failed to send welcome email");
-    // }
+    try {
+      await sendWelcomeEmail(
+        createdUser.email,
+        createdUser.fullname,
+      );
+    } catch (error) {
+      throw new ApiError(409, "failed to send welcome email");
+    }
 
     return createdUser;
   } else {
@@ -101,15 +100,14 @@ const registerUser = async (req) => {
       throw new ApiError(500, "Something went wrong!! User not created"); // if user not created/not found in database
     }
 
-    // try {
-    //   await sendWelcomeEmail(
-    //     createdUser.email,
-    //     createdUser.fullname,
-    //     process.env.CLIENT_URL,
-    //   );
-    // } catch (error) {
-    //   throw new ApiError(409, "failed to send welcome email");
-    // }
+    try {
+      await sendWelcomeEmail(
+        createdUser.email,
+        createdUser.fullname,
+      );
+    } catch (error) {
+      throw new ApiError(409, "failed to send welcome email");
+    }
 
     return createdUser;
   }

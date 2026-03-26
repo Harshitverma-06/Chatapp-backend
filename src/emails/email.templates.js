@@ -1,4 +1,4 @@
-export function createWelcomeEmailTemplate(name, clientURL) {
+export function createWelcomeEmailTemplate(name) {
   return `
   <!DOCTYPE html>
   <html lang="en">
@@ -24,10 +24,6 @@ export function createWelcomeEmailTemplate(name, clientURL) {
           <li style="margin-bottom: 10px;">Start a conversation</li>
           <li style="margin-bottom: 0;">Share photos, videos, and more</li>
         </ul>
-      </div>
-      
-      <div style="text-align: center; margin: 30px 0;">
-        <a href=${clientURL} style="background: linear-gradient(to right, #36D1DC, #5B86E5); color: white; text-decoration: none; padding: 12px 30px; border-radius: 50px; font-weight: 500; display: inline-block;">Open Messenger</a>
       </div>
       
       <p style="margin-bottom: 5px;">If you need any help or have questions, we're always here to assist you.</p>
