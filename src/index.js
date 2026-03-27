@@ -7,14 +7,12 @@ const port = process.env.PORT || 8000;
 
 connectDB()
   .then(() => {
-    app.listen(port, (req, res) =>
-      console.log(`server is listening`),
-    );
+    app.listen(port, (req, res) => console.log(`server is listening`));
     app.get("/", (req, res) => {
       res.send(`
-    Chat App API is running 
-        \n
-    Docs: https://chatapp-backend-vofr.onrender.com/api-docs
+    <h2>Chat App API </h2>
+  <p>Status: Running</p>
+  <a href="/api-docs">Go to API Docs</a>
   `);
     });
   })
