@@ -13,8 +13,8 @@ connectDB()
     app.get("/", (req, res) => {
       res.send(`
     Chat App API is running 
-
-    Docs: https://chatapp-backend-vofr.onrender.com/api/docs
+        \n
+    Docs: https://chatapp-backend-vofr.onrender.com/api-docs
   `);
     });
   })
