@@ -42,12 +42,18 @@ const uploadOnCloudinary = async (buffer, options = {}) => {
 const deleteFromCloudinary = async (imageUrl) => {
   try {
     if (!imageUrl) return null;
-    
-    // Extract public_id from the Cloudinary URL
-    // URL format: https://res.cloudinary.com/{cloud_name}/image/upload/{public_id}.{extension}
-    const urlParts = imageUrl.split("/");
-    const filenameWithExtension = urlParts[urlParts.length - 1];
-    const publicId = filenameWithExtension.split(".")[0];
+
+    // Extract public_id from Cloudinary URL, including folder paths.
+    // Examples:
+    // - https://res.cloudinary.com/<cloud>/image/upload/v123/avatars/abc.jpg  -> avatars/abc
+    // - https://res.cloudinary.com/<cloud>/image/upload/avatars/abc.png      -> avatars/abc
+    const cleanUrl = imageUrl.split("?")[0];
+    const uploadIdx = cleanUrl.indexOf("/upload/");
+    if (uploadIdx === -1) throw new Error("Invalid Cloudinary URL");
+
+    let publicIdWithExt = cleanUrl.slice(uploadIdx + "/upload/".length);
+    publicIdWithExt = publicIdWithExt.replace(/^v\d+\//, ""); // drop version segment if present
+    const publicId = publicIdWithExt.replace(/\.[^/.]+$/, ""); // drop extension
     
     // Delete from Cloudinary
     const response = await cloudinary.uploader.destroy(publicId);
