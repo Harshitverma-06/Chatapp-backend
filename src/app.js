@@ -20,7 +20,15 @@ app.use(cors(
     }
 ))
 app.use(arcjetProtection)
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    swaggerOptions: {
+      withCredentials: true,
+    },
+  }),
+);
 
 
 //Routes declaration

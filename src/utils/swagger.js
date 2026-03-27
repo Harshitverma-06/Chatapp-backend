@@ -24,8 +24,8 @@ const options = {
     ],
     servers: [
       {
-        url: "http://localhost:3000",
-        description: "Development server"
+        url: "/",
+        description: "Current server"
       },
     ],
     components: {
