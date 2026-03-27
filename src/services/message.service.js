@@ -1,17 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
-import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-// Configuration of Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const Allcontacts = async (req) => {
   try {
@@ -79,7 +69,8 @@ const MessagesByUserId = async (req) => {
 const messageSend = async (req) => {
   try {
     const { text, image } = req.body;
-    if(!(text || image)) {
+    // `image` may come either as a multer upload (`req.file`) or as a base64/data URL string.
+    if (!(text || image || req.file)) {
         throw new ApiError(409,"No message to send")
     }
     const { id: receiverId } = req.params;
@@ -91,12 +82,21 @@ const messageSend = async (req) => {
     }
 
     let imageUrl;
-    if (image) {
+    if (req.file?.buffer) {
       try {
-        //upload image to cloudinary
-        const uploadResponse = await cloudinary.uploader.upload(image);
-        imageUrl = uploadResponse.secure_url;
-        console.log("Image uploaded to Cloudinary:", imageUrl);
+        const uploadResponse = await uploadOnCloudinary(req.file.buffer, {
+          folder: "messages",
+        });
+        imageUrl = uploadResponse?.secure_url || uploadResponse?.url;
+      } catch (uploadError) {
+        console.error("Error uploading image:", uploadError);
+        throw new ApiError(400, "Failed to upload image");
+      }
+    } else if (image) {
+      // Backward compatibility: allow string-based uploads.
+      try {
+        const uploadResponse = await uploadOnCloudinary(image);
+        imageUrl = uploadResponse?.secure_url || uploadResponse?.url;
       } catch (uploadError) {
         console.error("Error uploading image:", uploadError);
         throw new ApiError(400, "Failed to upload image");
