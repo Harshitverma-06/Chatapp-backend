@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
 import { ApiError } from "./ApiError.js";
 
 // Configuration of Cloudinary
@@ -11,45 +10,33 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadOnCloudinary = async (localfilepath) => {
-  try {
-    if (!localfilepath) return null;
-    
-    // Check if file exists before uploading
-    if (!fs.existsSync(localfilepath)) {
-      throw new Error(`File not found at path: ${localfilepath}`);
-    }
+// Uploads an in-memory buffer to Cloudinary using `upload_stream`.
+// Works with multer `memoryStorage()` where `req.file.buffer` is available.
+const uploadOnCloudinary = async (buffer, options = {}) => {
+  if (!buffer) return null;
 
-    //upload file on cloudinary
-    const response = await cloudinary.uploader.upload(localfilepath, {
+  // Some clients may still send a base64/data URL string.
+  if (typeof buffer === "string") {
+    return cloudinary.uploader.upload(buffer, {
       resource_type: "auto",
+      ...options,
     });
-    
-    //file has been uploaded succesfully
-    console.log("File is uploaded on Cloudinary", response.url);
-    
-    // Delete local file after successful upload
-    if (fs.existsSync(localfilepath)) {
-      fs.unlinkSync(localfilepath);
-      console.log("Local file deleted:", localfilepath);
-    }
-    
-    return response;
-  } catch (error) {
-    console.error("Error uploading to Cloudinary:", error);
-    
-    // Remove the locally saved temporary file as the upload operation failed
-    if (fs.existsSync(localfilepath)) {
-      try {
-        fs.unlinkSync(localfilepath);
-        console.log("Local file deleted after error:", localfilepath);
-      } catch (deleteError) {
-        console.error("Error deleting local file:", deleteError);
-      }
-    }
-    
-    throw error;
   }
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "auto",
+        ...options,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      },
+    );
+
+    stream.end(buffer);
+  });
 };
 
 const deleteFromCloudinary = async (imageUrl) => {

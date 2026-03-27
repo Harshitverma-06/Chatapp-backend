@@ -46,12 +46,12 @@ const registerUser = async (req) => {
     throw new ApiError(409, "User with email or username already exists");
   }
 
-  const avatarLocalPath = req.files?.avatar[0]?.path; //Saving avatars local path
+  const avatarFile = req.files?.avatar?.[0];
 
   let avatar = null;
-  if (avatarLocalPath) {
+  if (avatarFile?.buffer) {
     try {
-      avatar = await uploadOnCloudinary(avatarLocalPath);
+      avatar = await uploadOnCloudinary(avatarFile.buffer, { folder: "avatars" });
     } catch (uploadError) {
       console.error("Avatar upload failed:", uploadError);
       throw new ApiError(400, "Failed to upload avatar");
@@ -59,12 +59,13 @@ const registerUser = async (req) => {
   }
 
   if (avatar) {
+    const avatarUrl = avatar.secure_url || avatar.url;
     const user = await User.create({
       fullname: fullname.trim(),
       email,
       password,
       username: username.toLowerCase(),
-      avatar: avatar.url,
+      avatar: avatarUrl,
     });
     const createdUser = await User.findById(user._id).select(
       "-password -refreshToken", //find user by id but remove password feild and refreshtoken feild
@@ -213,9 +214,9 @@ const updateAccountDetails = async (req) => {
 };
 
 const updateAvatar = async (req) => {
-  const avatarLocalPath = req.file?.path;
+  const avatarBuffer = req.file?.buffer;
 
-  if (!avatarLocalPath) {
+  if (!avatarBuffer) {
     throw new ApiError(400, "Avatar is missing");
   }
 
@@ -229,9 +230,10 @@ const updateAvatar = async (req) => {
   }
 
   // Upload new avatar
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
+  const avatar = await uploadOnCloudinary(avatarBuffer, { folder: "avatars" });
 
-  if (!avatar.url) {
+  const avatarUrl = avatar?.secure_url || avatar?.url;
+  if (!avatarUrl) {
     throw new ApiError(400, "Error while uploading avatar");
   }
 
@@ -239,7 +241,7 @@ const updateAvatar = async (req) => {
     req.user?._id,
     {
       $set: {
-        avatar: avatar.url,
+        avatar: avatarUrl,
       },
     },
     { returnDocument: 'after' },

@@ -1,6 +1,7 @@
 import express from "express";
 import verifyJWT from "../middlewares/auth.middleware.js";
 const router = express.Router();
+import { upload } from "../middlewares/multer.middleware.js";
 import {
   getAllContacts,
   getMessagesByUserId,
@@ -200,6 +201,6 @@ router.route("/:id").get(getMessagesByUserId);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.route("/send/:id").post(sendMessage);
+router.route("/send/:id").post(upload.single("image"), sendMessage);
 
 export default router;
