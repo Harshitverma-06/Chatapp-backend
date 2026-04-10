@@ -2,12 +2,17 @@ import dotenv from "dotenv";
 dotenv.config();
 import app from "./app.js";
 import connectDB from "./db/db.js";
+import http from "http";
+import { attachSocket } from "./socket.js";
 
 const port = process.env.PORT || 8000;
 
 connectDB()
   .then(() => {
-    app.listen(port, (req, res) => console.log(`server is listening`));
+    const server = http.createServer(app);
+    attachSocket(server);
+
+    server.listen(port, () => console.log(`server is listening`));
     app.get("/", (req, res) => {
       res.send(`
     <h2>Chat App API </h2>

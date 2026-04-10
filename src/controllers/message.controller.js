@@ -7,6 +7,7 @@ import {
   ChatPartners,
   deleteMessageById,
 } from "../services/message.service.js";
+import { getIO } from "../socketState.js";
 
 
 const getAllContacts = asyncHandler (async (req,res) => {
@@ -36,7 +37,14 @@ const sendMessage = asyncHandler (async (req,res) => {
 })
 
 const deleteMessage = asyncHandler(async (req, res) => {
-  await deleteMessageById(req);
+  const info = await deleteMessageById(req);
+
+  const io = getIO();
+  if (io && info) {
+    const messageId = String(info.messageId);
+    io.to(String(info.senderId)).emit("message_deleted", { messageId });
+    io.to(String(info.receiverId)).emit("message_deleted", { messageId });
+  }
   return res.status(200).json({
     success: true,
     message: "Message deleted successfully",

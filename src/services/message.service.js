@@ -143,7 +143,11 @@ const deleteMessageById = async (req) => {
     }
 
     await Message.deleteOne({ _id: message._id });
-    return true;
+    return {
+      messageId: message._id,
+      senderId: message.senderId,
+      receiverId: message.receiverId,
+    };
   } catch (error) {
     console.error("Error deleting message: ", error?.message || error);
     throw new ApiError(error?.statusCode || error?.statuscode || 500, error.message);
