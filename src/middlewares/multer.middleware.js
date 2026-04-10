@@ -1,7 +1,14 @@
 import multer from "multer";
 
-// Store uploaded files in memory (no local temp files).
-// This allows us to stream the buffer directly to Cloudinary.
+/**
+ * Use in-memory uploads so services can push buffers to Cloudinary.
+ * This matches usage across the codebase (e.g. `req.file.buffer`).
+ */
+const storage = multer.memoryStorage();
+
 export const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
 });

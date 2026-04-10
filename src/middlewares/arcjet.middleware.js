@@ -4,6 +4,7 @@ import { isSpoofedBot } from "@arcjet/inspect";
 const arcjetProtection = async (req, res, next) => {
   try {
     const decision = await aj.protect(req);
+    const isProduction = process.env.NODE_ENV === "production";
 
     if (decision.isDenied()) {
       if (decision.reason.isRateLimit()) {
@@ -11,7 +12,11 @@ const arcjetProtection = async (req, res, next) => {
           .status(429)
           .json({ message: "Rate limit reached, Please try again later" });
       } else if (decision.reason.isBot()) {
-        return res.status(403).json({ message: "Bot access denied" });
+        // Bot detection can false-positive for server-to-server calls (e.g. python-requests)
+        // during development. Only enforce bot blocks in production.
+        if (isProduction) {
+          return res.status(403).json({ message: "Bot access denied" });
+        }
       } else {
         return res
           .status(403)
@@ -20,7 +25,7 @@ const arcjetProtection = async (req, res, next) => {
     }
 
     //Check for spoofed bots
-    if (decision.results.some(isSpoofedBot)) {
+    if (isProduction && decision.results.some(isSpoofedBot)) {
         return res.status(403).json(
             {
                 error:"spoofed bot detected",

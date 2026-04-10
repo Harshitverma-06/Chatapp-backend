@@ -6,7 +6,8 @@ import {
   getAllContacts,
   getMessagesByUserId,
   sendMessage,
-  getChatPartners
+  getChatPartners,
+  deleteMessage,
 } from "../controllers/message.controller.js";
 
 //Protected routes
@@ -202,5 +203,11 @@ router.route("/:id").get(getMessagesByUserId);
  *               $ref: '#/components/schemas/Error'
  */
 router.route("/send/:id").post(upload.single("image"), sendMessage);
+
+/**
+ * DELETE /api/message/delete/:id
+ * Protected: only sender can delete (unsend) their message.
+ */
+router.route("/delete/:id").delete(deleteMessage);
 
 export default router;

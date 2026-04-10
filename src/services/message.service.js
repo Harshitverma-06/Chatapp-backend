@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 const Allcontacts = async (req) => {
   try {
@@ -118,4 +118,36 @@ const messageSend = async (req) => {
   }
 };
 
-export { Allcontacts, MessagesByUserId, messageSend, ChatPartners };
+const deleteMessageById = async (req) => {
+  try {
+    const myUserId = req.user._id;
+    const { id: messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      throw new ApiError(404, "Message not found");
+    }
+
+    if (message.senderId?.toString() !== myUserId?.toString()) {
+      throw new ApiError(403, "Unauthorized");
+    }
+
+    // If this message contains an image hosted on Cloudinary, delete it first.
+    if (
+      message.image &&
+      typeof message.image === "string" &&
+      (message.image.includes("res.cloudinary.com") ||
+        message.image.includes("/upload/"))
+    ) {
+      await deleteFromCloudinary(message.image);
+    }
+
+    await Message.deleteOne({ _id: message._id });
+    return true;
+  } catch (error) {
+    console.error("Error deleting message: ", error?.message || error);
+    throw new ApiError(error?.statusCode || error?.statuscode || 500, error.message);
+  }
+};
+
+export { Allcontacts, MessagesByUserId, messageSend, ChatPartners, deleteMessageById };
