@@ -3,6 +3,14 @@ import { isSpoofedBot } from "@arcjet/inspect";
 
 const arcjetProtection = async (req, res, next) => {
   try {
+    // Allow trusted service-to-service calls (e.g. Flask frontend -> Node backend)
+    // without weakening Arcjet protections for normal traffic.
+    const internalToken = process.env.INTERNAL_CALL_TOKEN;
+    const presentedToken = req.get("x-internal-token");
+    if (internalToken && presentedToken && presentedToken === internalToken) {
+      return next();
+    }
+
     const decision = await aj.protect(req);
     const isProduction = process.env.NODE_ENV === "production";
 
